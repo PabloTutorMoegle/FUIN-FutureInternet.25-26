@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Sensores Individual - Cloud API</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f4f9; padding: 20px; }
+        .container { width: 90%; max-width: 800px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #333; margin-bottom: 30px; }
+        h2 { color: #666; font-size: 1.2rem; text-align: center; }
+        canvas { max-height: 250px; }
+    </style>
+</head>
+<body>
+    <h1>Monitor de Sensores (ESP32)</h1>
+
+    <div class="container">
+        <h2>Temperatura (°C)</h2>
+        <canvas id="chartTemp"></canvas>
+    </div>
+
+    <div class="container">
+        <h2>Presión (hPa)</h2>
+        <canvas id="chartPress"></canvas>
+    </div>
+
+    <div class="container">
+        <h2>Altitud (m)</h2>
+        <canvas id="chartAlt"></canvas>
+    </div>
+
+    <script>
+        // Función auxiliar para crear la configuración básica de las gráficas
+        const crearConfig = (label, color) => ({
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: label,
+                    data: [],
+                    borderColor: color,
+                    backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: false } }
+            }
+        });
+
+        // Inicializamos las 3 gráficas
+        const chartTemp = new Chart(document.getElementById('chartTemp'), crearConfig('Temperatura', 'rgb(255, 99, 132)'));
+        const chartPress = new Chart(document.getElementById('chartPress'), crearConfig('Presión', 'rgb(54, 162, 235)'));
+        const chartAlt = new Chart(document.getElementById('chartAlt'), crearConfig('Altitud', 'rgb(75, 192, 192)'));
+
+        async function actualizarGraficas() {
+            try {
+                const response = await fetch('/obtener_valores');
+                const datos = await response.json();
+
+                // Limpiar datos anteriores
+                const labels = [];
+                const dataTemp = [];
+                const dataPress = [];
+                const dataAlt = [];
+
+                // Procesar datos del JSON
+                datos.forEach((registro, index) => {
+                    labels.push(index);
+                    dataTemp.push(registro.temperature);
+                    dataPress.push(registro.pressure);
+                    dataAlt.push(registro.altitude);
+                });
+
+                // Actualizar gráfica de Temperatura
+                chartTemp.data.labels = labels;
+                chartTemp.data.datasets[0].data = dataTemp;
+                chartTemp.update('none'); // 'none' para que no haga animación brusca cada 2 seg
+
+                // Actualizar gráfica de Presión
+                chartPress.data.labels = labels;
+                chartPress.data.datasets[0].data = dataPress;
+                chartPress.update('none');
+
+                // Actualizar gráfica de Altitud
+                chartAlt.data.labels = labels;
+                chartAlt.data.datasets[0].data = dataAlt;
+                chartAlt.update('none');
+
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+            }
+        }
+
+        // Actualizar cada 2 segundos
+        setInterval(actualizarGraficas, 2000);
+        // Primera carga inmediata
+        actualizarGraficas();
+    </script>
+</body>
+</html>
