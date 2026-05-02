@@ -1,6 +1,6 @@
 ## Practica de Fututre Internet
 
-Hecha en casa, lsita de materiales:
+Hecha en casa, lista de materiales:
 ```
 ESP32 DEVKIT V1
 BMP280
