@@ -9,7 +9,7 @@ BMP280
 Docker execution
 ```
 cd API_WEB_Curs
-sudo docker-compose up --build
+sudo docker compose up --build
 ```
 
 Para ver la pagina en la misma pagina
